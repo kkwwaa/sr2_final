@@ -94,35 +94,26 @@ TreeNodeID* buildBalancedTreeID(int left, int right) {
 }
 
 void PrintTreeIncrease(TreeNodeID*& Node) {
-	if (Node->left == nullptr) {
-		students[Node->RecNum].print();
-		if (Node->right != nullptr) PrintTreeIncrease(Node->right);
-	}
-	else {
-		PrintTreeIncrease(Node->left);
-		students[Node->RecNum].print();
-		if (Node->right != nullptr) PrintTreeIncrease(Node->right);
-	}
+	if (Node == nullptr) return;
+	PrintTreeIncrease(Node->left);
+	students[Node->RecNum].print();
+	PrintTreeIncrease(Node->right);
 }
 
-int SearchID() {
-	int value;
-	cout << "Введите ID студента: ";
-	cin >> value;
-
-	int pos = -1;
-	for (int i = 0; i < studentsNumber; i++) {//находим индекс элемента
-		if (students[i].id == value) {
-			pos = i;
-			break;
-		}
+int SearchID(TreeNodeID* Node, int id) {
+	if (Node == nullptr) {
+		cout << "Студента с таким ID не найдено" << endl;
+		return -1;
 	}
-	if (pos == -1) {
-		cout << "Элемент " << value << " не найден." << endl;
+	if (id == Node->StudentID) {
+		students[Node->RecNum].print();
+		return Node->RecNum;
 	}
-	else students[pos].print();
-	return pos;
-}	
+	else if (id < Node->StudentID)
+		return SearchID(Node->left, id);
+	else
+		return SearchID(Node->right, id);
+}
 #pragma endregion
 
 #pragma region Name
@@ -153,28 +144,26 @@ TreeNodeName* buildBalancedTreeName(int left, int right) {
 	return node;
 }
 
-void PrintTreeDecreaseName(TreeNodeName* node) {
-	if (node == nullptr) return;
-	PrintTreeDecreaseName(node->right);
-	students[node->RecNum].print();
-	PrintTreeDecreaseName(node->left);
+void PrintTreeDecreaseName(TreeNodeName* Node) {
+	if (Node == nullptr) return;
+	PrintTreeDecreaseName(Node->right);
+	students[Node->RecNum].print();
+	PrintTreeDecreaseName(Node->left);
 }
 
-int SearchName() {
-	string value;
-	cout << "Введите имя студента: ";
-	cin >> value;
-	int pos = -1;
-	for (int i = 0; i < studentsNumber; i++) {
-		if (students[i].name == value) {
-			pos = i;
-			break;
-		}
+int SearchName(TreeNodeName* Node, string name) {
+	if (Node == nullptr) {
+		cout << "Студента с таким ID не найдено" << endl;
+		return -1;
 	}
-	if (pos == -1)
-		cout << "Элемент " << value << " не найден." << endl;
-	else students[pos].print();
-	return pos;
+	if (name == Node->StudentName) {
+		students[Node->RecNum].print();
+		return Node->RecNum;
+	}
+	else if (name < Node->StudentName)
+		return SearchName(Node->left, name);
+	else
+		return SearchName(Node->right, name);
 }
 #pragma endregion
 
@@ -209,7 +198,7 @@ int main()
 
 	//Ввод списка
 
-	rebuildIndexArray();//построили инд массив по студентским ид
+	rebuildIndexArray();//построили инд массив по студенческим ид
 	RootID = buildBalancedTreeID(0, studentsNumber - 1);//создали сбалансированное дерево
 
 	rebuildIndexArrayName();
@@ -219,7 +208,8 @@ int main()
 
 	bool exit = false;
 	int choice = 0, subchoice = 0;
-	int pos;
+	int pos, id;
+	string name;
 
 	while (!exit) {
 		cout << "Главное меню:\n";
@@ -241,7 +231,9 @@ int main()
 			PrintTreeDecreaseName(RootName);
 			break;
 		case 4:
-			pos = SearchID();
+			cout << "Введите ID студента: ";
+			cin >> id;
+			pos = SearchID(RootID, id);
 			if (pos == -1)break;
 			cout << "1. Удалить запись\n2. Назад\nВведите команду: ";
 			cin >> subchoice;
@@ -249,7 +241,9 @@ int main()
 			removeElement(pos);
 			break;
 		case 5:
-			pos = SearchName();
+			cout << "Введите имя студента: ";
+			cin >> name;
+			pos = SearchName(RootName, name);
 			if (pos == -1)break;
 			cout << "1. Удалить запись\n2. Назад\nВведите команду: ";
 			cin >> subchoice;
@@ -265,8 +259,3 @@ int main()
 		}
 	}
 }
-
-//ввод
-//вывод
-//поиск
-//удаление
