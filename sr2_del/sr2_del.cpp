@@ -4,27 +4,49 @@
 
 using namespace std;
 
-const int MAX_STUDENTS = 100;
-
-bool sortById = true;
-
 struct Student {
 	int id;
-	string name;
+	string name;  // ФИО в одной строке
+	string submissionDate;
+	string reviewDate;
+	int gradeReport;
+	int gradeDefense;
+	string reviewer;
+	string seminarist;
 
 	void input() {
 		cout << "Введите ID студента: ";
 		cin >> id;
-
+		cin.ignore();  // Игнорируем \n перед getline
 		cout << "Введите ФИО: ";
-		cin >> name;
+		getline(cin, name);
+		cout << "Введите дату сдачи (ДД.ММ.ГГГГ): ";
+		cin >> submissionDate;
+		cout << "Введите дату проверки (ДД.ММ.ГГГГ): ";
+		cin >> reviewDate;
+		cout << "Введите оценку за отчет: ";
+		cin >> gradeReport;
+		cout << "Введите оценку за защиту: ";
+		cin >> gradeDefense;
+		cin.ignore();
+		cout << "Введите фамилию проверяющего: ";
+		getline(cin, reviewer);
+		cout << "Введите фамилию семинариста: ";
+		getline(cin, seminarist);
 	}
+
 
 	void print() {
-		cout << "ID: " << id
-			<< " Name: " << name << endl;
+		cout << "ID: " << id << ", ФИО: " << name
+			<< ", Дата сдачи: " << submissionDate
+			<< ", Дата проверки: " << reviewDate
+			<< ", Оценка за отчет: " << gradeReport
+			<< ", Оценка за защиту: " << gradeDefense
+			<< ", Проверяющий: " << reviewer
+			<< ", Семинарист: " << seminarist << endl;
 	}
 };
+
 struct TreeNodeID {
 	int StudentID;
 	int RecNum;
@@ -35,26 +57,49 @@ struct TreeNodeID {
 struct TreeNodeName {
 	string StudentName;
 	int RecNum;
+
 	TreeNodeName* left = nullptr;
 	TreeNodeName* right = nullptr;
 };
 
 #pragma region Global
-int studentsNumber = 7;
+const int MAX_STUDENTS = 100;
+int studentsNumber = 10;
 Student students[MAX_STUDENTS] = {
-	{4,"Ave",},
-	{2,"Bib",},
-	{3,"Cid",},
-	{1,"Azi",},
-	{7,"Dap"},
-	{6,"Zon"},
-	{5,"Lal"}
+	{3, "Борисова Екатерина Андреевна", "27.11.2024", "03.12.2024", 6, 9, "Долныкова", "Будин"},
+	{5, "Дуров Павел Валерьевич", "01.12.2024", "10.12.2024", 4, 6, "Долныкова", "Цидвинцев"},
+	{9, "Косвинцев Богдан Павлович", "01.12.2024", "10.12.2024", 6, 8, "Осока", "Цидвинцев"},
+	{10, "Никитин Никита Никитич", "01.12.2024", "10.12.2024", 0, 0, "Долныкова", "Будин"},
+	{1, "Петров Арсений Николаевич", "25.11.2024", "30.11.2024", 7, 9, "Долныкова", "Цидвинцев"},
+	{8, "Понькина Татьяна Евгеньевна", "25.11.2024", "05.12.2024", 8, 8, "Осока", "Цидвинцев"},
+	{2, "Семенов Евгений Александрович", "25.11.2024", "30.11.2024", 5, 8, "Долныкова", "Будин"},
+	{6, "Симонов Антон Владимирович", "25.11.2024", "01.12.2024", 8, 8, "Осока", "Цидвинцев"},
+	{4, "Юрьева София Юрьевна", "28.11.2024", "03.12.2024", 2, 9, "Долныкова", "Цидвинцев"},
+	{7, "Янина Анна Владимировна", "25.11.2024", "01.12.2024", 7, 7, "Осока", "Цидвинцев"}
 };
 int* IndexArrayID = nullptr;
 TreeNodeID* RootID = nullptr;
 
 int* IndexArrayName = nullptr;
 TreeNodeName* RootName = nullptr;
+
+string normalize(const string& str) {
+	string result = "";
+	for (size_t i = 0; i < str.length(); i++) {
+		char ch = str[i];
+
+		// Приводим к нижнему регистру вручную
+		if (ch >= 'А' && ch <= 'Я') {
+			ch = ch + ('a' - 'A');
+		}
+
+		// Пропускаем пробелы
+		if (ch != ' ') {
+			result += ch;
+		}
+	}
+	return result;
+}
 #pragma endregion
 
 #pragma region ID
@@ -79,10 +124,7 @@ void rebuildIndexArray() {
 }
 
 TreeNodeID* buildBalancedTreeID(int left, int right) {
-	if (left > right) {
-		return nullptr;
-	}
-
+	if (left > right) return nullptr;
 	int mid = left + (right - left) / 2;
 	TreeNodeID* node = new TreeNodeID;
 	node->RecNum = IndexArrayID[mid];
@@ -156,11 +198,14 @@ int SearchName(TreeNodeName* Node, string name) {
 		cout << "Студента с таким ID не найдено" << endl;
 		return -1;
 	}
-	if (name == Node->StudentName) {
+
+	string NodeName = normalize(Node->StudentName);
+
+	if (name == NodeName) {
 		students[Node->RecNum].print();
 		return Node->RecNum;
 	}
-	else if (name < Node->StudentName)
+	else if (name < NodeName)
 		return SearchName(Node->left, name);
 	else
 		return SearchName(Node->right, name);
@@ -196,7 +241,21 @@ int main()
 	SetConsoleOutputCP(1251);
 	SetConsoleCP(1251);
 
+	bool exit = false;
+	int choice = 0, subchoice = 0;
+	int pos, id;
+	string name;
+
 	//Ввод списка
+	cout << "Удалить исходные данные?\n1. Да\n2. Нет\nВведите команду: ";
+	cin >> choice;
+	if (choice == 1) {
+		cout << "Введите количество значений для добавления: ";
+		cin >> studentsNumber;
+			for (int i = 0; i < studentsNumber; i++) {
+				students[i].input();
+			}
+	}
 
 	rebuildIndexArray();//построили инд массив по студенческим ид
 	RootID = buildBalancedTreeID(0, studentsNumber - 1);//создали сбалансированное дерево
@@ -205,11 +264,6 @@ int main()
 	RootName = buildBalancedTreeName(0, studentsNumber - 1);//аналог-но для имен
 
 	PrintStudents();//вывели список
-
-	bool exit = false;
-	int choice = 0, subchoice = 0;
-	int pos, id;
-	string name;
 
 	while (!exit) {
 		cout << "Главное меню:\n";
@@ -243,7 +297,7 @@ int main()
 		case 5:
 			cout << "Введите имя студента: ";
 			cin >> name;
-			pos = SearchName(RootName, name);
+			pos = SearchName(RootName, normalize(name));
 			if (pos == -1)break;
 			cout << "1. Удалить запись\n2. Назад\nВведите команду: ";
 			cin >> subchoice;
