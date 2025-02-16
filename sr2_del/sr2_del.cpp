@@ -193,22 +193,22 @@ void PrintTreeDecreaseName(TreeNodeName* Node) {
 	PrintTreeDecreaseName(Node->left);
 }
 
-int SearchName(TreeNodeName* Node, string name) {
-	if (Node == nullptr) {
-		cout << "Студента с таким ID не найдено" << endl;
-		return -1;
-	}
+int SearchName(string name) {
+	TreeNodeName* Node = RootName;
+	while (Node != nullptr) {
+		string NodeName = normalize(Node->StudentName);
 
-	string NodeName = normalize(Node->StudentName);
-
-	if (name == NodeName) {
-		students[Node->RecNum].print();
-		return Node->RecNum;
+		if (name == NodeName) {
+			students[Node->RecNum].print();
+			return Node->RecNum;
+		}
+		else if (name < NodeName)
+			Node = Node->left;
+		else
+			Node = Node->right;
 	}
-	else if (name < NodeName)
-		return SearchName(Node->left, name);
-	else
-		return SearchName(Node->right, name);
+	cout << "Студента с таким ФИО не найдено" << endl;
+	return -1;
 }
 #pragma endregion
 
@@ -234,7 +234,6 @@ void removeElement(int pos) {
 	RootName = buildBalancedTreeName(0, studentsNumber - 1);
 }
 
-
 int main()
 {
 	setlocale(LC_ALL, "Russian");
@@ -252,9 +251,9 @@ int main()
 	if (choice == 1) {
 		cout << "Введите количество значений для добавления: ";
 		cin >> studentsNumber;
-			for (int i = 0; i < studentsNumber; i++) {
-				students[i].input();
-			}
+		for (int i = 0; i < studentsNumber; i++) {
+			students[i].input();
+		}
 	}
 
 	rebuildIndexArray();//построили инд массив по студенческим ид
@@ -267,24 +266,40 @@ int main()
 
 	while (!exit) {
 		cout << "Главное меню:\n";
-		cout << "1. Вывести список студентов\n";
-		cout << "2. Отсортировать список студентов по возрастанию ID\n3. Отсортировать список студентов по убыванию имени\n";
-		cout << "4. Поиск студента по ID\n5. Поиск студента по ФИО\nВведите команду: ";
+		cout << "1. Добавить запись\n2. Вывести список студентов\n";
+		cout << "3. Отсортировать список студентов по возрастанию ID\n4. Отсортировать список студентов по убыванию имени\n";
+		cout << "5. Поиск студента по ID\n6. Поиск студента по ФИО\nВведите команду: ";
 		cin >> choice;
 
 		switch (choice) {
 		case 1:
+			cout << "Введите количество значений для добавления: ";
+			int n;
+			cin >> n;
+			studentsNumber += n;
+			for (int i = studentsNumber-n; i < studentsNumber; i++) {
+				students[i].input();
+			}
+			rebuildIndexArray();//построили инд массив по студенческим ид
+			RootID = buildBalancedTreeID(0, studentsNumber - 1);//создали сбалансированное дерево
+
+			rebuildIndexArrayName();
+			RootName = buildBalancedTreeName(0, studentsNumber - 1);//аналог-но для имен
+
 			PrintStudents();
 			break;
 		case 2:
+			PrintStudents();
+			break;
+		case 3:
 			cout << "Cписок студентов по возрастанию ID\n";
 			PrintTreeIncrease(RootID);
 			break;
-		case 3:
+		case 4:
 			cout << "Cписок студентов по убыванию имени\n";
 			PrintTreeDecreaseName(RootName);
 			break;
-		case 4:
+		case 5:
 			cout << "Введите ID студента: ";
 			cin >> id;
 			pos = SearchID(RootID, id);
@@ -294,17 +309,18 @@ int main()
 			if (subchoice == 2)break;
 			removeElement(pos);
 			break;
-		case 5:
-			cout << "Введите имя студента: ";
-			cin >> name;
-			pos = SearchName(RootName, normalize(name));
+		case 6:
+			cout << "Введите ФИО студента: ";
+			cin.ignore();
+			getline(cin, name);
+			pos = SearchName(normalize(name));
 			if (pos == -1)break;
 			cout << "1. Удалить запись\n2. Назад\nВведите команду: ";
 			cin >> subchoice;
 			if (subchoice == 2)break;
 			removeElement(pos);
 			break;
-		case 6:
+		case 7:
 			exit = true;
 			break;
 		default:
